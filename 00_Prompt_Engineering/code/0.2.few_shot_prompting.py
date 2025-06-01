@@ -1,61 +1,49 @@
-import openai
+"""
+# Use Case: Few-Shot Prompting
+# - Sentiment Classification with examples
+# - English to French Translation with examples
+"""
 import os
+import openai
 from dotenv import load_dotenv
 
-# Load API Key
-load_dotenv()
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+def get_openai_client():
+    load_dotenv()
+    api_key = os.getenv("OPENAI_API_KEY")
+    return openai.OpenAI(api_key=api_key)
 
-# Initialize OpenAI Client
-client = openai.OpenAI(api_key=OPENAI_API_KEY)
+def get_response(client, prompt, model="gpt-4o-mini", temperature=0.5):
+    response = client.chat.completions.create(
+        model=model,
+        temperature=temperature,
+        messages=[{"role": "user", "content": prompt}]
+    )
+    return response.choices[0].message.content
 
-# Few-shot Prompt with Examples
-prompt1 = """
-Classify the sentiment of the following movie reviews as 'Positive' or 'Negative'.
+def main():
+    client = get_openai_client()
+    prompts = [
+        {
+            "title": "Few-Shot Sentiment Classification",
+            "prompt": '''Classify the sentiment of the following movie reviews as 'Positive' or 'Negative'.\n\nExample 1:\nReview: "The movie was an absolute masterpiece. The storytelling was gripping, and the characters were unforgettable."\nSentiment: Positive\n\nExample 2:\nReview: "I regret watching this movie. It was too long, boring, and the acting was terrible."\nSentiment: Negative\n\nExample 3:\nReview: "The cinematography was stunning, but the plot was weak and predictable."\nSentiment:'''
+        },
+        {
+            "title": "Few-Shot English to French Translation",
+            "prompt": '''Translate the following sentences from English to French.\n\nExample 1:\nEnglish: "Good morning!"\nFrench: "Bonjour!"\n\nExample 2:\nEnglish: "How are you?"\nFrench: "Comment ça va?"\n\nExample 3:\nEnglish: "Where is the nearest train station?"\nFrench:'''
+        }
+    ]
+    for i, item in enumerate(prompts, 1):
+        print(f"\nExample {i}: {item['title']}")
+        print(f"Prompt:\n{item['prompt']}")
+        response = get_response(client, item['prompt'])
+        print(f"Response: {response}")
+        print("-" * 50)
 
-Example 1:
-Review: "The movie was an absolute masterpiece. The storytelling was gripping, and the characters were unforgettable."
-Sentiment: Positive
+if __name__ == "__main__":
+    main()
 
-Example 2:
-Review: "I regret watching this movie. It was too long, boring, and the acting was terrible."
-Sentiment: Negative
-
-Example 3:
-Review: "The cinematography was stunning, but the plot was weak and predictable."
-Sentiment:
 """
-
-prompt2 = """
-Translate the following sentences from English to French.
-
-Example 1:
-English: "Good morning!"
-French: "Bonjour!"
-
-Example 2:
-English: "How are you?"
-French: "Comment ça va?"
-
-Example 3:
-English: "Where is the nearest train station?"
-French:
+Summary:
+    - Demonstrates how to provide examples in prompts for improved LLM accuracy
+    - Shows few-shot learning for different NLP tasks
 """
-
-# Get AI Response
-response1 = client.chat.completions.create(
-    model="gpt-3.5-turbo",
-    messages=[{"role": "user", "content": prompt1}]
-)
-
-# Get AI Response
-response2 = client.chat.completions.create(
-    model="gpt-3.5-turbo",  # Change to "gpt-4" if available
-    messages=[{"role": "user", "content": prompt2}]
-)
-
-
-# Print AI Responses
-print("AI Response for Prompt 1:", response1.choices[0].message.content)
-
-print("AI Response for Prompt 2:", response2.choices[0].message.content)
